@@ -4,3 +4,5 @@
 ## Dependencies
 - https://pypi.org/project/transforms3d/
 - https://pypi.org/project/GDAL/
+- Open CV 2
+- pds4_tools
