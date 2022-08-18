@@ -1,10 +1,11 @@
-#!/usr/bin/python3
+# !/usr/bin/python3
 '''
 Rover Reconstruction Group
 M2020 Utility Script
 Author: Ashwin Nedungadi and Tushar Jayesh Barot
 Maintainer: ashwin.nedungadi@tu-dortmund.de and tushar.barot@tu-dortmund.de
 Licence: The MIT License
+Status: Production
 '''
 
 import gdal
@@ -18,6 +19,7 @@ import pds4_tools
 import transforms3d
 import math
 
+
 def normalize(input):
     """ Given an image numpy array, normailzes the image to Uint8.
     :param np array
@@ -27,15 +29,16 @@ def normalize(input):
     normalized_image = cv2.normalize(input, None, 0, 255, cv2.NORM_MINMAX, dtype=cv2.CV_8U)
 
     # Manual Way of Normalizing
-    #max_val = input.max()
-    #min_val = 0
-    #k = 255/max_val
-    #normalized_image = input*k
+    # max_val = input.max()
+    # min_val = 0
+    # k = 255/max_val
+    # normalized_image = input*k
 
     # Another way of normalizing
-    #norm = (input - np.min(input)) / (np.max(input) - np.min(input))
+    # norm = (input - np.min(input)) / (np.max(input) - np.min(input))
 
     return normalized_image
+
 
 def get_imgs(input_directory):
     """ A function that filters local .IMG and .png files from local directory, ignores thumbnails based on img_size
@@ -60,6 +63,7 @@ def get_imgs(input_directory):
             imgs.append(file)
     return imgs
 
+
 def read_img(file):
     """ reads .IMG file and returns the rgb array
     :param .IMG filename
@@ -69,7 +73,7 @@ def read_img(file):
     image_array = []
 
     image = gdal.Open(os.path.join(os.getcwd(), file))
-    #print(f'image: {file}')
+    # print(f'image: {file}')
     for band in range(image.RasterCount):
         band += 1
 
@@ -96,6 +100,7 @@ def read_img(file):
         return image_array[0], band_dim[0]
 
     return image_array[0], band_dim[0]
+
 
 def view(input_image):
     """ views an .IMG or .png file when called with the filename as argument.
@@ -132,6 +137,7 @@ def view(input_image):
     else:
         print("Error: File format not recognized. Must be .IMG or .png.")
 
+
 def convert_to_png(input_directory, output_directory):
     """ saves the input .img file as a .png, if a directory is given, iterates through all .img files in directory and saves as .png in the optional directory given.
     :param input direcotry, output directory as absolute filepath
@@ -149,21 +155,25 @@ def convert_to_png(input_directory, output_directory):
             if bands > 1:
                 plt.imsave(os.path.join(output_directory, Path(file).stem + '.png'), normalized_image, format='png')
             else:
-                plt.imsave(os.path.join(output_directory, Path(file).stem + '.png'), image_array, format='png', cmap='gray')
+                plt.imsave(os.path.join(output_directory, Path(file).stem + '.png'), image_array, format='png',
+                           cmap='gray')
 
     else:
         if input_directory.endswith(".IMG"):
             image_array, bands = read_img(input_directory)
             normalized_image = normalize(image_array)
             if bands > 1:
-                plt.imsave(os.path.join(output_directory, Path(input_directory).stem + '.png'), normalized_image, format='png')
+                plt.imsave(os.path.join(output_directory, Path(input_directory).stem + '.png'), normalized_image,
+                           format='png')
             else:
-                plt.imsave(os.path.join(output_directory, Path(input_directory).stem + '.png'), image_array, format='png', cmap='gray')
+                plt.imsave(os.path.join(output_directory, Path(input_directory).stem + '.png'), image_array,
+                           format='png', cmap='gray')
 
     if file_count:
         print(file_count, "Files were converted")
     else:
         print("Image converted successfully")
+
 
 def get_filetags(image_name):
     """ Given an image, returns relevant information from the filename such as which stereo pair, which engineering camera and what level of processing has been done.
@@ -197,10 +207,10 @@ def get_filetags(image_name):
 
         image_processing_code = image_name[3][3:6]
 
-
         return camera_tag, stereo_tag, image_processing_code
     except IndexError:
         print("Input path not of expected type. Please double check input.")
+
 
 def sort_stereo(input_directory):
     """ Given a directory, sorts all stereo images into new directories for left and right cameras. Creates a copy, does not move original files.
@@ -221,7 +231,7 @@ def sort_stereo(input_directory):
         im_stem = Path(im).stem
         print('Working on:\t\t' + im)
         camera, stereo_pair, image_code = get_filetags(im)
-        #print(camera, stereo_pair, image_code)
+        # print(camera, stereo_pair, image_code)
 
         existing_imgpath = os.path.join(input_directory, im)
         existing_xmlpath = os.path.join(input_directory, im_stem + ".xml")
@@ -241,11 +251,12 @@ def sort_stereo(input_directory):
         except FileNotFoundError:
             print("Could not move", existing_xmlpath, im, "File may not exist.")
 
+
 def find_stereo(image_path):
     """ Given a left or right camera image, returns the filename of the other pair. If no matching stereo pair is found, returns None.
     :param Image filename as absolute path
     :returns stereo pair as string"""
-    #To Do: Depending on tests, must dynamically search for stereo pair in directory and not just edit filename for other pair.
+    # To Do: Depending on tests, must dynamically search for stereo pair in directory and not just edit filename for other pair.
 
     image_name = image_path.split("/")[-1]
     print("Given File:", image_name)
@@ -279,7 +290,7 @@ def clean_poses(pose_array):
     # vector origin
     clean_poses = dict()
     for key, val in pose_array[0].items():
-        #print(key, val)
+        # print(key, val)
         clean_poses[key.strip("geom:")] = val
 
     # Quaternion
@@ -288,9 +299,10 @@ def clean_poses(pose_array):
 
     return clean_poses
 
+
 def get_poses(input_xml, frame):
     """ Given an xml file and frame as string, returns a dictionary with all relevant pose information
-    :param input xml filename, one str tag from list: 
+    :param input xml filename, one str tag from list:
         Nav: ["rover", "site", "rsm", "arm"]
         Mast: ["rover", "rsm", "arm_turret", "arm_pixl"]
     :returns 8 element dictionary containing position, quaternion & rotation direction
@@ -324,7 +336,7 @@ def get_poses(input_xml, frame):
             # extract frame id from "local_identifier" xml tag
             if k1 == "local_identifier":
                 frame_id = (v1[0].split('_')[0]).lower()
-                
+
                 if frame_id == "rover":
                     for k2, v2 in val.items():
                         if k2 == "geom:Vector_Origin_Offset":
@@ -357,6 +369,7 @@ def get_poses(input_xml, frame):
                             pose.append(v2)
                     return clean_poses(pose)
 
+
 def get_cahvore(input_xml):
     """ Given an xml file, returns a dictionary with all relevant CAHVORE information
      :param xml filename as absolute path
@@ -369,14 +382,14 @@ def get_cahvore(input_xml):
 
     # Read structure and CAHVORE Label
     structures = pds4_tools.read(input_xml)
-    
-    cam_name,*temp = get_filetags(Path(input_xml).name)
+
+    cam_name, *temp = get_filetags(Path(input_xml).name)
 
     if 'Mast' in cam_name:
         parameters = structures.label.findall('.//geom:CAHVOR_Model')
     elif 'Nav' in cam_name:
         parameters = structures.label.findall('.//geom:CAHVORE_Model')
-    
+
     # Setup dictionary for CAHVORE parameters
     camera_parameters = dict()
 
@@ -421,7 +434,6 @@ def get_cahvore(input_xml):
     return camera_parameters
 
 
-
 def debayer(array):
     """ Given a normalized numpy image array, returns the debayered numpy image array.
     :param numpy array
@@ -436,18 +448,19 @@ def debayer(array):
 
     return debayered
 
-def get_cahv_ref(xml_file : str):
+
+def get_cahv_ref(xml_file: str):
     """
-    Given an xml as string, return a dictionary of pose components: 
+    Given an xml as string, return a dictionary of pose components:
     3D translation vector and quaternion
-    
+
     Example:
     input: 'ZL0_0096_0675441669_163EDR_N0040136ZCAM08054_110085J03.xml'
     output: {'x': '0.805029', 'y': '0.559415', 'z': '-1.91903', 'qcos': '0.979816', 'qsin1': '-0.000630205', 'qsin2': '-0.00411854', 'qsin3': '-0.199856'}
 
     Maintainer: Tushar Jayesh Barot
     """
-    
+
     structures = pds4_tools.read(xml_file)
     parameters = structures.label.findall('.//geom:Camera_Model_Parameters')
 
@@ -470,10 +483,10 @@ def get_pose_rsm_wrt_site(xml: str):
     input: xml file of the image
     output: homogeneous matrix
 
-    Concept: 
-    Navcam pose is derived from CAHV* model, RSM head frame, Rover_nav frame and the Site frame, 
+    Concept:
+    Navcam pose is derived from CAHV* model, RSM head frame, Rover_nav frame and the Site frame,
     whereas Mastcam has the exception of not using the site frame as the given pose is wrt SITE_INDEX_1 directly
-    
+
     Maintainer: Tushar Jayesh Barot
     '''
 
@@ -487,37 +500,44 @@ def get_pose_rsm_wrt_site(xml: str):
         camera_name = 'mast'
         for frame in ["rover", "rsm"]:
             poses[frame] = get_poses(xml, frame)
-        
 
-    if camera_name == 'nav':    # only navcam has site frame
-        trv_site = np.array([poses['site']['x_position'], poses['site']['y_position'], poses['site']['z_position']], dtype=float)
-        q_site = np.array([poses['site']['qcos'], poses['site']['qsin1'], poses['site']['qsin2'], poses['site']['qsin3']], dtype=float)
+    if camera_name == 'nav':  # only navcam has site frame
+        trv_site = np.array([poses['site']['x_position'], poses['site']['y_position'], poses['site']['z_position']],
+                            dtype=float)
+        q_site = np.array(
+            [poses['site']['qcos'], poses['site']['qsin1'], poses['site']['qsin2'], poses['site']['qsin3']],
+            dtype=float)
         rmat_site = transforms3d.quaternions.quat2mat(q_site)
         tf_site = transforms3d.affines.compose(trv_site, rmat_site, np.ones(3))
-    
-    trv_rover = np.array([poses['rover']['x_position'], poses['rover']['y_position'], poses['rover']['z_position']], dtype=float)
-    trv_rsm = np.array([poses['rsm']['x_position'], poses['rsm']['y_position'], poses['rsm']['z_position']], dtype=float)
+
+    trv_rover = np.array([poses['rover']['x_position'], poses['rover']['y_position'], poses['rover']['z_position']],
+                         dtype=float)
+    trv_rsm = np.array([poses['rsm']['x_position'], poses['rsm']['y_position'], poses['rsm']['z_position']],
+                       dtype=float)
 
     # quat2mat for all frames
-    q_rover = np.array([poses['rover']['qcos'], poses['rover']['qsin1'], poses['rover']['qsin2'], poses['rover']['qsin3']], dtype=float)
+    q_rover = np.array(
+        [poses['rover']['qcos'], poses['rover']['qsin1'], poses['rover']['qsin2'], poses['rover']['qsin3']],
+        dtype=float)
     rmat_rover = transforms3d.quaternions.quat2mat(q_rover)
 
-    q_rsm = np.array([poses['rsm']['qcos'], poses['rsm']['qsin1'], poses['rsm']['qsin2'], poses['rsm']['qsin3']], dtype=float)
+    q_rsm = np.array([poses['rsm']['qcos'], poses['rsm']['qsin1'], poses['rsm']['qsin2'], poses['rsm']['qsin3']],
+                     dtype=float)
     rmat_rsm = transforms3d.quaternions.quat2mat(q_rsm)
-    
-    
+
     # homogeneous matrices
     tf_rover = transforms3d.affines.compose(trv_rover, rmat_rover, np.ones(3))
     tf_rsm = transforms3d.affines.compose(trv_rsm, rmat_rsm, np.ones(3))
 
     if camera_name == 'nav':
-        tf_rover_wrt_site = np.dot(tf_site,tf_rover)
+        tf_rover_wrt_site = np.dot(tf_site, tf_rover)
     elif camera_name == 'mast':
         tf_rover_wrt_site = tf_rover
     tf_rsm_wrt_site = np.dot(tf_rover_wrt_site, tf_rsm)
     # print(tf_rsm_wrt_site)
 
-    return(tf_rsm_wrt_site)
+    return (tf_rsm_wrt_site)
+
 
 def get_pose_cahv(cam_model: str):
     '''
@@ -525,7 +545,7 @@ def get_pose_cahv(cam_model: str):
 
     input: photogrammetric model derived from CAHV* model
     output: dict{'euler':[], 'trvec':[]}
-    
+
     Maintainer: Tushar Jayesh Barot
     '''
 
@@ -540,3 +560,8 @@ def get_pose_cahv(cam_model: str):
     tf_cahv = transforms3d.affines.compose(trv_cahv, rmat_cahv, np.ones(3))
 
     return tf_cahv
+
+
+if __name__ == '__main__':
+
+    convert_to_png("C:/Users/Ashwin/Desktop/WiSe 2021/Semester Project/sol255/Sol54", "C:/Users/Ashwin/Desktop/WiSe 2021/Semester Project/sol255/Sol54")
