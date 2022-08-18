@@ -562,6 +562,3 @@ def get_pose_cahv(cam_model: str):
     return tf_cahv
 
 
-if __name__ == '__main__':
-
-    convert_to_png("C:/Users/Ashwin/Desktop/WiSe 2021/Semester Project/sol255/Sol54", "C:/Users/Ashwin/Desktop/WiSe 2021/Semester Project/sol255/Sol54")
